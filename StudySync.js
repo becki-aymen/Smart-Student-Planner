@@ -606,7 +606,6 @@ setInterval(updateCountdown, 1000 * 60 * 60); // Check every hour
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 const chatMessages = document.getElementById('chat-messages');
-
 sendBtn.addEventListener('click', async () => {
     const userMsg = chatInput.value.trim();
     if (!userMsg) return;
@@ -616,22 +615,22 @@ sendBtn.addEventListener('click', async () => {
 
     try {
         appendMessage("bot", "⏳ جارٍ التحميل...");
+
         const response = await fetch('https://gemini-backeen.onrender.com/ask', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ message: userMsg })
-});
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userMsg })
+        });
 
-const data = await response.json();
-appendMessage("bot", data.reply);
+        const data = await response.json();
+        chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
+        appendMessage("bot", data.reply);
 
-
-        const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't understand that.";
-        appendMessage("bot", botReply);
     } catch (error) {
-        appendMessage("bot", "Error connecting to Gemini API.");
+        chatMessages.lastChild.remove();
+        appendMessage("bot", "❌ خطأ أثناء الاتصال بخادم Gemini.");
         console.error(error);
     }
 });
