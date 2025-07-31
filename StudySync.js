@@ -616,15 +616,17 @@ sendBtn.addEventListener('click', async () => {
 
     try {
         appendMessage("bot", "⏳ جارٍ التحميل...");
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDR_0vM3veYiFxREMaBKzQ6LNep6CwD8m8', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: userMsg }] }]
-            })
-        });
-        const data = await response.json();
-        console.log("Gemini response:", data);
+        const response = await fetch('https://gemini-backeen.onrender.com/ask', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ message: userMsg })
+});
+
+const data = await response.json();
+appendMessage("bot", data.reply);
+
 
         const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't understand that.";
         appendMessage("bot", botReply);
