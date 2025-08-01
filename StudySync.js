@@ -615,16 +615,7 @@ sendBtn.addEventListener('click', async () => {
 
     try {
         appendMessage("bot", "⏳ جارٍ التحميل...");
-
-        const response = await fetch('https://gemini-backeen.onrender.com/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: userMsg })
-        });
-
-        const data = await response.json();
+        const data = await generateText();
         chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
         appendMessage("bot", data.reply);
 
@@ -641,4 +632,36 @@ function appendMessage(sender, text) {
     message.textContent = (sender === "user" ? "👤 " : "🤖 ") + text;
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function generateText(
+  system , content 
+) {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(
+        "https://openrouter.ai/api/v1/chat/completions", // Correct OpenRouter endpoint
+        {
+          model: "gpt-3.5-turbo", // Specify your desired model
+          messages: [
+            { role: 'system', content: system},
+            {
+              role: "user",
+              content,
+            },
+          ],
+          max_tokens: 1000,
+        },
+        {
+          headers: {
+Authorization:  "Bearer <api key>", // Replace with your actual OpenRouter API key
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((response) => {
+        resolve(response.data.choices);
+      })
+      .catch((err) => reject(err));
+  });
 }
