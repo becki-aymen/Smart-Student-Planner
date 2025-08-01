@@ -615,9 +615,9 @@ sendBtn.addEventListener('click', async () => {
 
     try {
         appendMessage("bot", "⏳ جارٍ التحميل...");
-        const data = await generateText();
+        const data = await generateText("You are a helpful assistant that acts as trainer in a E-learning platform." , userMsg);
         chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
-        appendMessage("bot", data.reply);
+        appendMessage("bot", data[0].message.content);
 
     } catch (error) {
         chatMessages.lastChild.remove();
@@ -633,7 +633,7 @@ function appendMessage(sender, text) {
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-
+const api_key = "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"
 function generateText(
   system , content 
 ) {
@@ -654,7 +654,7 @@ function generateText(
         },
         {
           headers: {
-Authorization:  "Bearer <api key>", // Replace with your actual OpenRouter API key
+Authorization:  `Bearer ${api_key}`, // Replace with your actual OpenRouter API key
             "Content-Type": "application/json",
           },
         }
