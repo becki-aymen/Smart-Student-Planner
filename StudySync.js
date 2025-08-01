@@ -1,4 +1,4 @@
-// DOM Elements
+// DOM Elements from index.html
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const todoInput = document.getElementById('todo-input');
 const subjectSelect = document.getElementById('subject-select');
@@ -633,6 +633,7 @@ function appendMessage(sender, text) {
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
 const api_key = "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"
 function generateText(
   system , content 
@@ -665,3 +666,4 @@ Authorization:  `Bearer ${api_key}`, // Replace with your actual OpenRouter API 
       .catch((err) => reject(err));
   });
 }
+
