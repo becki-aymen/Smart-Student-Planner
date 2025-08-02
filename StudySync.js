@@ -641,23 +641,16 @@ sendBtn.addEventListener('click', async () => {
     appendMessage("user", userMsg);
     chatInput.value = '';
 
+    appendMessage("bot", "⏳ جارٍ التحميل...");
+
     try {
-        appendMessage("bot", "⏳ جارٍ التحميل...");
-
-chatMessages.lastChild.remove();
-
-try {
-  const botReply = await generateText("", userMsg); // "" يمكن استبداله برسالة للنظام إن أردت
-  appendMessage("bot", botReply);
-} catch (err) {
-  console.error(err);
-  appendMessage("bot", "❌ فشل الاتصال بـ OpenRouter API.");
-}
-
-    } catch (error) {
+        const botReply = await generateText("", userMsg); // "" يمكن استبدالها بتعليمات للبوت إذا أردت
+        chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
+        appendMessage("bot", botReply);
+    } catch (err) {
         chatMessages.lastChild.remove();
-        appendMessage("bot", "❌ خطأ أثناء الاتصال بخادم Gemini.");
-        console.error(error);
+        appendMessage("bot", "❌ فشل الاتصال بـ OpenRouter API.");
+        console.error(err);
     }
 });
 
@@ -668,4 +661,32 @@ function appendMessage(sender, text) {
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+function generateText(system, content) {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "gpt-3.5-turbo",
+          messages: [
+            // يمكنك تفعيل هذا إذا أردت تعليمة للنظام
+            // { role: "system", content: system },
+            { role: "user", content }
+          ],
+          max_tokens: 1000
+        },
+        {
+          headers: {
+            Authorization: "Bearer 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",
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      .then((response) => {
+        resolve(response.data.choices[0].message.content);
+      })
+      .catch((err) => reject(err));
+  });
+}
+
 
