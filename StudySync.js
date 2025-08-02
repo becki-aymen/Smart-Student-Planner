@@ -1,4 +1,4 @@
-// DOM Elements from index.html
+// DOM Elements
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const todoInput = document.getElementById('todo-input');
 const subjectSelect = document.getElementById('subject-select');
@@ -642,4 +642,3 @@ function appendMessage(sender, text) {
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-
