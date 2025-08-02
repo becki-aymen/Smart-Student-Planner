@@ -21,6 +21,13 @@ const storageNotice = document.getElementById('storage-notice');
 const closeNoticeBtn = document.getElementById('close-notice-btn');
 const quoteText = document.getElementById('quote-text');
 const quoteAuthor = document.getElementById('quote-author');
+/ DOM Elements
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const chatMessages = document.getElementById('chat-messages');
+
+// Chatbot State
+let isBotTyping = false;
 
 // App State
 let todos = JSON.parse(localStorage.getItem('studysync_todos')) || [];
@@ -602,91 +609,105 @@ setExamBtn.addEventListener('click', () => {
 });
 
 // Update countdown daily
-setInterval(updateCountdown, 1000 * 60 * 60); // Check every hour
-const chatInput = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
-const chatMessages = document.getElementById('chat-messages');
-function generateText(system, content) {
-  return new Promise((resolve, reject) => {
-    axios
-      .post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          model: "gpt-3.5-turbo",
-          messages: [
-            // يمكنك تفعيل هذا إذا أردت تعليمة للنظام
-            // { role: "system", content: system },
-            { role: "user", content }
-          ],
-          max_tokens: 1000
-        },
-        {
-          headers: {
-            Authorization: "Bearer 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",
-            "Content-Type": "application/json"
-          }
-        }
-      )
-      .then((response) => {
-        resolve(response.data.choices[0].message.content);
-      })
-      .catch((err) => reject(err));
-  });
-}
+// Chatbot Implementation - Fixed Version
 
-sendBtn.addEventListener('click', async () => {
-    const userMsg = chatInput.value.trim();
-    if (!userMsg) return;
-
-    appendMessage("user", userMsg);
-    chatInput.value = '';
-
-    appendMessage("bot", "⏳ جارٍ التحميل...");
-
-    try {
-        const botReply = await generateText("", userMsg); // "" يمكن استبدالها بتعليمات للبوت إذا أردت
-        chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
-        appendMessage("bot", botReply);
-    } catch (err) {
-        chatMessages.lastChild.remove();
-        appendMessage("bot", "❌ فشل الاتصال بـ OpenRouter API.");
-        console.error(err);
+// Event Listeners
+sendBtn.addEventListener('click', handleChatInput);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !isBotTyping) {
+        handleChatInput();
     }
 });
 
-function appendMessage(sender, text) {
-    const message = document.createElement('div');
-    message.className = `chat-message ${sender}`;
-    message.textContent = (sender === "user" ? "👤 " : "🤖 ") + text;
-    chatMessages.appendChild(message);
+async function handleChatInput() {
+    const userMsg = chatInput.value.trim();
+    if (!userMsg || isBotTyping) return;
+
+    // Display user message
+    appendMessage('user', userMsg);
+    chatInput.value = '';
+    
+    try {
+        isBotTyping = true;
+        chatInput.disabled = true;
+        sendBtn.disabled = true;
+        
+        // Show typing indicator
+        const typingIndicator = appendMessage('bot', 'Typing...', true);
+        
+        // Get bot response - IMPORTANT: In production, move this to a backend service
+        const botResponse = await getBotResponse(userMsg);
+        
+        // Remove typing indicator and show actual response
+        chatMessages.removeChild(typingIndicator);
+        appendMessage('bot', botResponse);
+    } catch (error) {
+        console.error('Chatbot error:', error);
+        appendMessage('bot', "Sorry, I'm having trouble responding. Please try again later.");
+    } finally {
+        isBotTyping = false;
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+}
+
+async function getBotResponse(userMessage) {
+    try {
+        // IMPORTANT: This should be handled by your backend in production
+        // This is just for demonstration purposes
+        const response = await axios.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+                model: "gpt-3.5-turbo", // or any other model you prefer
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are StudyBot, a helpful AI assistant for students. Keep responses concise (1-2 paragraphs max) and educational."
+                    },
+                    { role: "user", content: userMessage }
+                ],
+                max_tokens: 500,
+                temperature: 0.7
+            },
+            {
+                headers: {
+                    "Authorization": `Bearer ${yourOpenRouterKey}`, // Replace with your actual key
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('API Error:', error);
+        // Fallback responses when API fails
+        const fallbackResponses = [
+            "I'm having trouble connecting to my knowledge base. Maybe try again later?",
+            "Let me think about that... Actually, I'm having some technical difficulties right now.",
+            "That's an interesting question! Unfortunately I can't access my full knowledge right now."
+        ];
+        return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+}
+
+function appendMessage(sender, text, isTyping = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender} ${isTyping ? 'typing' : ''}`;
+    
+    const avatar = document.createElement('span');
+    avatar.className = 'chat-avatar';
+    avatar.textContent = sender === 'user' ? '👤' : '🤖';
+    
+    const content = document.createElement('div');
+    content.className = 'chat-content';
+    content.textContent = text;
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(content);
+    
+    chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    return messageDiv;
 }
-function generateText(system, content) {
-  return new Promise((resolve, reject) => {
-    axios
-      .post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          model: "gpt-3.5-turbo",
-          messages: [
-            // يمكنك تفعيل هذا إذا أردت تعليمة للنظام
-            // { role: "system", content: system },
-            { role: "user", content }
-          ],
-          max_tokens: 1000
-        },
-        {
-          headers: {
-            Authorization: "Bearer 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",
-            "Content-Type": "application/json"
-          }
-        }
-      )
-      .then((response) => {
-        resolve(response.data.choices[0].message.content);
-      })
-      .catch((err) => reject(err));
-  });
-}
-
-
