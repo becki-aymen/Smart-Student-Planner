@@ -610,104 +610,57 @@ setExamBtn.addEventListener('click', () => {
 
 // Update countdown daily
 // Chatbot Implementation - Fixed Version
+ try {
+        appendMessage("bot", "⏳ جارٍ التحميل...");
 
-// Event Listeners
-sendBtn.addEventListener('click', handleChatInput);
-chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !isBotTyping) {
-        handleChatInput();
-    }
-});
-
-async function handleChatInput() {
-    const userMsg = chatInput.value.trim();
-    if (!userMsg || isBotTyping) return;
-
-    // Display user message
-    appendMessage('user', userMsg);
-    chatInput.value = '';
-    
-    try {
-        isBotTyping = true;
-        chatInput.disabled = true;
-        sendBtn.disabled = true;
-        
-        // Show typing indicator
-        const typingIndicator = appendMessage('bot', 'Typing...', true);
-        
-        // Get bot response - IMPORTANT: In production, move this to a backend service
-        const botResponse = await getBotResponse(userMsg);
-        
-        // Remove typing indicator and show actual response
-        chatMessages.removeChild(typingIndicator);
-        appendMessage('bot', botResponse);
-    } catch (error) {
-        console.error('Chatbot error:', error);
-        appendMessage('bot', "Sorry, I'm having trouble responding. Please try again later.");
-    } finally {
-        isBotTyping = false;
-        chatInput.disabled = false;
-        sendBtn.disabled = false;
-        chatInput.focus();
-    }
-}
-
-async function getBotResponse(userMessage) {
-    try {
-        // IMPORTANT: This should be handled by your backend in production
-        // This is just for demonstration purposes
-        const response = await axios.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            {
-                model: "gpt-3.5-turbo", // or any other model you prefer
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are StudyBot, a helpful AI assistant for students. Keep responses concise (1-2 paragraphs max) and educational."
-                    },
-                    { role: "user", content: userMessage }
-                ],
-                max_tokens: 500,
-                temperature: 0.7
+        const response = await fetch('https://gemini-backeen.onrender.com/ask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             },
-            {
-                headers: {
-                    "Authorization": `Bearer ${yourOpenRouterKey}`, // Replace with your actual key
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-        
-        return response.data.choices[0].message.content;
-    } catch (error) {
-        console.error('API Error:', error);
-        // Fallback responses when API fails
-        const fallbackResponses = [
-            "I'm having trouble connecting to my knowledge base. Maybe try again later?",
-            "Let me think about that... Actually, I'm having some technical difficulties right now.",
-            "That's an interesting question! Unfortunately I can't access my full knowledge right now."
-        ];
-        return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-    }
+            body: JSON.stringify({ message: userMsg })
+        });
+
+        const data = await response.json();
+        const data = await generateText();
+        chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
+        appendMessage("bot", data.reply);
+
+@@ -642,3 +633,35 @@ function appendMessage(sender, text) {
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function appendMessage(sender, text, isTyping = false) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${sender} ${isTyping ? 'typing' : ''}`;
-    
-    const avatar = document.createElement('span');
-    avatar.className = 'chat-avatar';
-    avatar.textContent = sender === 'user' ? '👤' : '🤖';
-    
-    const content = document.createElement('div');
-    content.className = 'chat-content';
-    content.textContent = text;
-    
-    messageDiv.appendChild(avatar);
-    messageDiv.appendChild(content);
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    return messageDiv;
+function generateText(
+  system , content 
+) {
+  return new Promise((resolve, reject) => {
+    axios
+      .post(
+        "https://openrouter.ai/api/v1/chat/completions", // Correct OpenRouter endpoint
+        {
+          model: "gpt-3.5-turbo", // Specify your desired model
+          messages: [
+            { role: 'system', content: system},
+            {
+              role: "user",
+              content,
+            },
+          ],
+          max_tokens: 1000,
+        },
+        {
+          headers: {
+Authorization:  "Bearer <api key>", // Replace with your actual OpenRouter API key
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((response) => {
+        resolve(response.data.choices);
+      })
+      .catch((err) => reject(err));
+  });
 }
+Footer
+© 2025 GitHub, I
