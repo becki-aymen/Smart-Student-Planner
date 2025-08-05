@@ -1,4 +1,4 @@
-// DOM Elements
+// DOM Elements from index.html
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const todoInput = document.getElementById('todo-input');
 const subjectSelect = document.getElementById('subject-select');
@@ -21,13 +21,6 @@ const storageNotice = document.getElementById('storage-notice');
 const closeNoticeBtn = document.getElementById('close-notice-btn');
 const quoteText = document.getElementById('quote-text');
 const quoteAuthor = document.getElementById('quote-author');
-/ DOM Elements
-const chatInput = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
-const chatMessages = document.getElementById('chat-messages');
-
-// Chatbot State
-let isBotTyping = false;
 
 // App State
 let todos = JSON.parse(localStorage.getItem('studysync_todos')) || [];
@@ -609,28 +602,39 @@ setExamBtn.addEventListener('click', () => {
 });
 
 // Update countdown daily
-// Chatbot Implementation - Fixed Version
- try {
+setInterval(updateCountdown, 1000 * 60 * 60); // Check every hour
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const chatMessages = document.getElementById('chat-messages');
+sendBtn.addEventListener('click', async () => {
+    const userMsg = chatInput.value.trim();
+    if (!userMsg) return;
+
+    appendMessage("user", userMsg);
+    chatInput.value = '';
+
+    try {
         appendMessage("bot", "⏳ جارٍ التحميل...");
-
-        const response = await fetch('https://gemini-backeen.onrender.com/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: userMsg })
-        });
-
-        const data = await response.json();
-        const data = await generateText();
+        const data = await generateText("You are a helpful assistant that acts as trainer in a E-learning platform." , userMsg);
         chatMessages.lastChild.remove(); // إزالة "جارٍ التحميل..."
-        appendMessage("bot", data.reply);
+        appendMessage("bot", data[0].message.content);
 
-@@ -642,3 +633,35 @@ function appendMessage(sender, text) {
+    } catch (error) {
+        chatMessages.lastChild.remove();
+        appendMessage("bot", "❌ خطأ أثناء الاتصال بخادم Gemini.");
+        console.error(error);
+    }
+});
+
+function appendMessage(sender, text) {
+    const message = document.createElement('div');
+    message.className = `chat-message ${sender}`;
+    message.textContent = (sender === "user" ? "👤 " : "🤖 ") + text;
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+const api_key = "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"
 function generateText(
   system , content 
 ) {
@@ -651,7 +655,7 @@ function generateText(
         },
         {
           headers: {
-Authorization:  "Bearer <api key>", // Replace with your actual OpenRouter API key
+Authorization:  `Bearer ${api_key}`, // Replace with your actual OpenRouter API key
             "Content-Type": "application/json",
           },
         }
@@ -662,5 +666,3 @@ Authorization:  "Bearer <api key>", // Replace with your actual OpenRouter API k
       .catch((err) => reject(err));
   });
 }
-Footer
-© 2025 GitHub, I
